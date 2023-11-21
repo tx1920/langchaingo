@@ -127,7 +127,7 @@ type CompoundChatMessage struct {
 
 func (m CompoundChatMessage) GetType() ChatMessageType { return m.Type }
 func (m CompoundChatMessage) GetContent() string {
-	b, _ := json.Marshal(m.Parts)
+	b, _ := json.Marshal(m.Parts) // nolint:errchkjson
 	return string(b)
 }
 

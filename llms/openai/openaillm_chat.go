@@ -177,7 +177,6 @@ func messagesToClientMessages(messages []schema.ChatMessage) []*openaiclient.Cha
 			msg.Name = n.GetName()
 		}
 		if cl, ok := m.(schema.ContentList); ok {
-			fmt.Println("has content list")
 			msg.Content = cl.GetContentList()
 		}
 		msgs[i] = msg

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/openai"
 	"github.com/tmc/langchaingo/schema"
 )
@@ -20,7 +21,9 @@ var (
 
 func main() {
 	flag.Parse()
-	llm, err := openai.NewChat(openai.WithModel("gpt-4-vision-preview"))
+	llm, err := openai.NewChat(
+		openai.WithModel("gpt-4-vision-preview"),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,12 +49,15 @@ func main() {
 				},
 			},
 		},
-	})
+	}, llms.WithMaxTokens(1024),
+		llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
+			fmt.Print(string(chunk))
+			return nil
+		}))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(completion)
+	_ = completion
 
 }
 
@@ -65,21 +71,10 @@ func loadImageBase64(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read image: %w", err)
 	}
-
 	// Determine the content type of the image file
 	mimeType := http.DetectContentType(data)
-
-	var base64Encoding string
-	// Prepend the appropriate URI scheme header depending
-	// on the MIME type
-	switch mimeType {
-	case "image/jpeg":
-		base64Encoding += "data:image/jpeg;base64,"
-	case "image/png":
-		base64Encoding += "data:image/png;base64,"
-	}
-	base64Encoding += base64.StdEncoding.EncodeToString(data)
-	return base64Encoding, nil
+	base64Encoding := base64.StdEncoding.EncodeToString(data)
+	return fmt.Sprintf("data:%s;base64,%s", mimeType, base64Encoding), nil
 }
 
 func pathToReader(path string) (io.ReadCloser, error) {
